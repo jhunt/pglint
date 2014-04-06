@@ -13,7 +13,7 @@ GetOptions(\%OPTIONS, qw/
 pod2usage(1) if $OPTIONS{help};
 pod2usage("No SQL file specified") unless @ARGV;
 
-sub DEBUG { print STDERR "> ",$@,"\n" if $OPTIONS{debug}; }
+sub DEBUG { print STDERR "> ",@_,"\n" if $OPTIONS{debug}; }
 
 my $rc = 0;
 for my $file (@ARGV) {
