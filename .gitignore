@@ -1,0 +1,58 @@
+# intermediate files
+.*.swp
+*~
+*.out
+*.tar.gz
+*.deb
+.libs
+callgrind.out.*
+
+# built objects
+*.o
+*.gc??
+*.lo
+*.la
+docs
+coverage
+*.1
+
+# autotools
+*.in
+config.h
+config.log
+config.status
+configure
+configure.scan
+autoscan.log
+autom4te.cache
+aclocal.m4
+.deps
+stamp-h1
+Makefile
+libtool
+build/autotools/*.m4
+!build/autotools/as-compiler-flag.m4
+!build/autotools/cdoc.m4
+!build/autotools/gcov.m4
+
+# stuff
+src/forge-broker
+src/forge-builder
+src/forge-client
+src/forge-config
+src/forge-stat
+src/retry
+
+# debian
+debian/changelog
+debian/codesmith-forge-broker.debhelper.log
+debian/codesmith-forge-broker/
+debian/codesmith-forge-builder.debhelper.log
+debian/codesmith-forge-builder/
+debian/codesmith-forge-client.debhelper.log
+debian/codesmith-forge-client/
+debian/codesmith-forge-common.debhelper.log
+debian/codesmith-forge-common/
+debian/tmp/
+debian/*.substvars
+debian/files

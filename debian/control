@@ -1,0 +1,17 @@
+Source: pglint
+Maintainer: James Hunt <james@jameshunt.us>
+Section: devel
+Priority: optional
+Homepage: https://github.com/filefrog/pglint
+Standards-Version: 3.9.3
+Build-Depends: debhelper (>= 8),
+               perl
+
+Package: pglint
+Description: PL/PSQL Syntax Checker
+Architecture: all
+Depends: perl,
+         perl-base,
+         perl-modules,
+         libecpg-dev,
+         ${misc:Depends}

@@ -1,0 +1,120 @@
+#!/usr/bin/perl
+use diagnostics;
+use strict;
+use warnings;
+use IPC::Run qw/run timeout/;
+use Pod::Usage;
+use Getopt::Long qw/:config bundling/;
+my %OPTIONS = ();
+GetOptions(\%OPTIONS, qw/
+	help|h|?
+	debug|D
+/) or pod2usage(2);
+pod2usage(1) if $OPTIONS{help};
+pod2usage("No SQL file specified") unless @ARGV;
+
+sub DEBUG { print STDERR "> ",$@,"\n" if $OPTIONS{debug}; }
+
+my $rc = 0;
+for my $file (@ARGV) {
+	DEBUG "Processing SQL file '$file'";
+	my $pgc = "$file.pgc";
+	my $out = ".$file.out";
+
+	DEBUG "Opening $file for reading";
+	open my $infh, "<", $file
+		or die "Failed to open $file for reading: $!\n";
+
+	DEBUG "Opening $pgc for writing";
+	open my $outfh, ">", $pgc
+		or die "Failed to open $pgc for writing: $!\n";
+
+	my %linemap = ();
+	my $stmt = 1;
+	my $line = 0;
+
+	my $sql = '';
+	while (<$infh>) {
+		chomp;
+		$line++;
+		s/--.*//;
+		next unless $_;
+
+		if (m/^[A-Z]/) {
+			# start of a new statement;
+			$linemap{$stmt++} = $line;
+
+			if ($sql) {
+				DEBUG "Found SQL statement: '$sql'";
+				print $outfh "EXEC SQL $sql\n";
+				$sql = '';
+			}
+		}
+
+		$sql .= "$_ ";
+	}
+	if ($sql) {
+		DEBUG "Found SQL statement: '$sql'";
+		print $outfh "EXEC SQL $sql\n";
+	}
+
+	close $infh;
+	close $outfh;
+
+	DEBUG "Running `/usr/bin/ecpg -o $out $pgc`";
+	my ($stdin, $stdout, $stderr);
+	run ["/usr/bin/ecpg", "-o", $out, $pgc],
+	    \$stdin, \$stdout, \$stderr,
+	    timeout(10);
+
+	DEBUG "ecpg completed, status code = $?";
+	DEBUG "Removing $pgc"; unlink $pgc;
+	DEBUG "Removing $out"; unlink $out;
+
+	print "$file: ".($? == 0 ? "OK" : "FAILED")."\n";
+	if ($?) {
+		$rc = 1;
+		$stderr =~ s/^$pgc/$file/;
+		$stderr =~ s/^($file):(\d+)/"$1:$linemap{$2}"/e;
+		print STDERR $stderr;
+	}
+}
+DEBUG "Complete";
+exit $rc;
+
+=head1 NAME
+
+B<pglint> - PL/PSQL Syntax Checker
+
+=head1 SYNOPSIS
+
+pglint /path/to/*.sql
+
+=head1 DESCRIPTION
+
+B<pglint> is a static analyzer for PL/PSQL, PostgreSQL's embedded query
+language.  It parses one or more files that contain SQL statements, and then
+validates that they are syntactically valid.  This can help to avoid silly
+problems like incorrect quoting semantics, missing commas, mispelled
+keywords, etc.  It will not protect against logic errors (column name typos,
+type mismatch on data operations, etc).
+
+=head1 OPTIONS
+
+=over
+
+=item B<-h>, B<--help>
+
+Show the help screen.
+
+=item B<-D>, B<--debug>
+
+Enable debugging, to see what B<pglint> is doing.
+
+=back
+
+=head1 AUTHOR
+
+Written by James Hunt B<< <james@jameshunt.us>>.
+
+=cut
