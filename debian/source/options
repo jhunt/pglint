@@ -1,1 +1,1 @@
-extend-diff-ignore = '^scripts/data'
+extend-diff-ignore = '^(scripts/data|pglint.*.tar.gz)'
